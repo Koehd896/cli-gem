@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/cli_gem.rb"
+
+Scraper.new.get_movies
+
+require "pry"
+binding.pry
