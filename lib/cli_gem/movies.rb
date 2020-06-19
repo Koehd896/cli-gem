@@ -39,21 +39,16 @@ class Movie
     @actors << Actor.find_or_create_by_name(actor)
   end
 
-  def self.list_movies(movies)
-    movies.each.with_index(1) do |movie, index|
-      puts "#{index}. #{movie.display_movie}"
-      puts "----------------" unless index == movies.length 
-    end
-  end
-  
-  def display_movie
-    puts "#{self.name}
-    Actors: #{self.actors.join(", ")} 
-    Genre(s): #{self.genres.join(", ")}"
+  def actor_names
+    self.actors.map {|actor| actor.name }
   end
 
-  def self.display_movies_by_actor(actor)
-    self.list_movies()
+  def genre_names
+    self.genres.map {|genre| genre.name }
+  end
+
+  def self.find_by_name(name)
+    self.all.detect {|movie| movie.name.downcase == name.downcase }
   end
 
 end

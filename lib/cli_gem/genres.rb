@@ -1,17 +1,19 @@
 class Genre
   attr_accessor :name
-  attr_reader :movies
 
   @@all = []
 
   def initialize(name)
     @name = name
-    @movies = []
     @@all << self
   end
 
   def self.all
     @@all
+  end
+
+  def self.all_names
+    @@all.map{|genre| genre.name }
   end
   
   def movies
@@ -21,7 +23,7 @@ class Genre
   end
 
   def self.find_by_name(name)
-    self.all.detect {|genre| genre.name == name }
+    self.all.detect {|genre| genre.name.downcase == name.downcase }
   end
 
   def self.find_or_create_by_name(name)
