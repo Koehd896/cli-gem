@@ -1,5 +1,4 @@
 class Cli
-    attr_accessor :input, :output, :list
   BASE_URL = "https://www.imdb.com"
   LIST_URL = "https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm"
 
@@ -13,7 +12,8 @@ class Cli
   ERRORS = {
     input: "I'm sorry, that's not a valid command, please try again.",
     movie: "I'm sorry, I can't find that movie, please try again.",
-    number: "I'm sorry, that is not a valid number, please try again."
+    actor: "I'm sorry, I can't find that actor, please try again.",
+    genre: "I'm sorry, I can't find that genre, please try again."
   }
   PROMPTS = {
     browse_by_genre: "Please enter a genre or enter 'list genres' to see all genres",
@@ -68,12 +68,10 @@ class Cli
   end
 
   def input_loop
-    display_output
-    get_user_input
     until @input == "exit"
-      validate_input
+      display_output
+      get_user_input
       get_new_output
-      input_loop
     end
     goodbye
   end
@@ -99,37 +97,46 @@ class Cli
     @input = gets.strip.downcase
   end
 
-  def validate_input
-    case @keyword
-    when "main menu"
-      unless ["browse", "browse by actor", "browse by genre"].any?(@input)
-        @output = ERRORS[:input]
-        input_loop
-      end
-    when "browse by actor prompt"
-      unless @input == "list actors" || Actor.find_by_name(@input)
-        @output = ERRORS[:input]
-        input_loop
-      end
-    when "browse by genre prompt"
-      unless @input == "list genres" || Genre.find_by_name(@input)
-        @output = ERRORS[:input]
-        input_loop
-      end
-    when "movie list"
-      unless @list[@input.to_i - 1] || @list.any?{|movie| movie.name.downcase == @input }
-        @output = ERRORS[:movie]
-        input_loop
-      end
-    when "play"
-      unless @input == 'main menu' || @input == "exit"
-        @output = ERRORS[:input]
-        input_loop
-      end
-    end
+  # def valid_input?
+  #   case @keyword
+  #   when "main menu" then ["browse", "browse by actor", "browse by genre"].any?(@input)
+  #     unless 
+        
+  #       input_loop
+  #     end
+  #   when "browse by actor prompt"
+  #     unless @input == "list actors" || Actor.find_by_name(@input)
+  #       @output = ERRORS[:input]
+  #       input_loop
+  #     end
+  #   when "actor list"
+  #     unless Actor.find_by_name(@input) || @list[@input.to_i - 1]
+  #       @output = ERRORS[:actor]
+  #     end
+  #   when "browse by genre prompt"
+  #     unless @input == "list genres" || Genre.find_by_name(@input)
+  #       @output = ERRORS[:input]
+  #       input_loop
+  #     end
+  #   when "genre list"
+  #     unless Genre.find_by_name(@input) || @list[@input.to_i - 1]
+  #       @output = ERRORS[:genre]
+  #       input_loop
+  #     end
+  #   when "movie list"
+  #     unless @list[@input.to_i - 1] || Movie.find_by_name(@input)
+  #       @output = ERRORS[:movie]
+  #       input_loop
+  #     end
+  #   when "play"
+  #     unless @input == 'main menu' || @input == "exit"
+  #       @output = ERRORS[:input]
+  #       input_loop
+  #     end
+  #   end
 
     
-  end
+  # end
 
   def get_new_output
     case @keyword
@@ -147,43 +154,77 @@ class Cli
         @output = PROMPTS[:browse_by_genre]
         @keyword = "browse by genre prompt"
         @list = nil
+      else
+        @output = ERRORS[:input]
       end
     when "browse by actor prompt"
       if @input == "list actors"
         @output = display_names(Actor)
-        @keyword = "browse by actor prompt"
+        @keyword = "actor list"
         @list = Actor.all
       else
+        @keyword = "actor list"
+        get_new_output
+      end
+    when "actor list"
+      if /^[\d]+$/.match(@input) && @list[@input.to_i - 1]
+        actor = @list[@input.to_i - 1]
+        @output = display_movies(actor.movies)
+        @keyword = "movie list"
+        @list = actor.movies
+      elsif Actor.find_by_name(@input)
         actor = Actor.find_by_name(@input)
         @output = display_movies(actor.movies)
         @keyword = "movie list"
         @list = actor.movies
+      else
+        @output = ERRORS[:actor]
       end
     when "browse by genre prompt"
       if @input == "list genres"
         @output = display_names(Genre)
-        @keyword = "browse by genre prompt"
+        @keyword = "genre list"
         @list = Genre.all
       else
+        @keyword = "genre list"
+        get_new_output
+      end
+    when "genre list"
+      if /^[\d]+$/.match(@input) && @list[@input.to_i - 1]
+        genre = @list[@input.to_i - 1]
+        @output = display_movies(genre.movies)
+        @keyword = "movie list"
+        @list = genre.movies
+      elsif Genre.find_by_name(@input)
         genre = Genre.find_by_name(@input)
         @output = display_movies(genre.movies)
         @keyword = "movie list"
         @list = genre.movies
+      else
+        @output = ERRORS[:genre]
       end
     when "movie list"
-      if /^[\d]+$/.match?(@input)
-        @output = play(@list[@input.to_i - 1])
+      if /^[\d]+$/.match(@input) && @list[@input.to_i - 1]
+        movie= @list[@input.to_i - 1]
+        @output = play(movie)
+        @keyword = "play"
+        @list = nil
+      elsif Movie.find_by_name(@input)
+        movie = Movie.find_by_name(@input)
+        @output = play(movie)
         @keyword = "play"
         @list = nil
       else
-        @output = play(Movie.find_by_name(@input))
-        @keyword = "play"
-        @list = nil
+        @output = ERRORS[:movie]
       end
     when "play"
-      @output = MAIN_MENU
-      @keyword = "main menu"
-      @list = nil
+      if @input == "main menu" || @input == "exit"
+        @output = MAIN_MENU
+        @keyword = "main menu"
+        @list = nil
+      else
+        @output = ERRORS[:input]
+      end
     end
 
   end
