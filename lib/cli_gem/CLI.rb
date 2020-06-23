@@ -2,57 +2,52 @@ class Cli
   BASE_URL = "https://www.imdb.com"
   LIST_URL = "https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm"
 
-  MAIN_MENU =  "Welcome to Movie Assistant! Please choose from the following options:
+  MAIN_MENU =  "Main menu - Please choose from the following options:
   'browse' - list all movies
   'browse by genre' - list movies by genre
-  'browse by actor' - list movies by actor"
-  #   ALL_MOVIES = display_movies(Movie.all)
-#   ALL_ACTORS = display_names(Actor.all)
-#   ALL_GENRES = display_names(Genre.all)
+  'browse by actor' - list movies by actor
+  'browse by rating' - list movies by rating
+  'recommendation' - get a movie recommendation"
+
   ERRORS = {
     input: "I'm sorry, that's not a valid command, please try again.",
     movie: "I'm sorry, I can't find that movie, please try again.",
     actor: "I'm sorry, I can't find that actor, please try again.",
-    genre: "I'm sorry, I can't find that genre, please try again."
+    genre: "I'm sorry, I can't find that genre, please try again.",
+    rating: "Rating must be a number between 1 and 5, please try again.",
+    no_views: "I'm sorry you have not watched a movie yet. Please watch a movie to get personalized recommendations.",
+    actor_rec: "There are no other movies with your favorite actor/actress.",
+    genre_rec: "There are no other movies with your favorite genre."
   }
+  
   PROMPTS = {
+    welcome: "Welcome to Movie Assistant! Please enter your name",
     browse_by_genre: "Please enter a genre or enter 'list genres' to see all genres",
     browse_by_actor: "Please enter an actor or enter 'list actors' to see all actors",
     next: "What would you like to do next?
         'exit' - end program
-        'main menu - return to main menu" 
+        'main menu - return to main menu",
+    rating: "How did you like this movie? Please leave a rating, 1-5",
+    recommendation: "What would you like your recommendation to be based on? (select a number)
+      1. Your favorite movie
+      2. Your favorite actor/actress
+      3. Your favorite genre
+      4. Users with similar viewing history"
   }
-#   CONDITIONS = {
-#     main_menu: ["browse", "browse by actor", "browse by genre"].any?(@input)
-#   }
-
-
-#   pattern:
-#   display(optional)
-    #   could be:
-    #   -prompt
-    #   -menu/list
-#   get user input:
-    #   could be:
-    #   -command
-    #   -prompt
-#   validate user input
-    #   validate method loops until condition is met and returns argument for next method?
-    #   
-#   generate arguments for next method
-#   call next method based on user input
-    #   have case statement with validated input to call next method
-
 
   def initialize
     @list = []
-    @keyword = "main menu"
-    @output = MAIN_MENU
+    @keyword = "welcome"
+    @output = PROMPTS[:welcome]
+    @movie = nil
+    @user = nil
   end
 
   def run
     make_movies
-    add_all_attributes
+    add_movie_attributes
+    make_users
+    make_ratings
     input_loop
   end
 
@@ -60,10 +55,32 @@ class Cli
     Movie.create_from_collection(Scraper.get_movies(LIST_URL))
   end
 
-  def add_all_attributes
+  def add_movie_attributes
     Movie.all.each do |movie|
       attribute_hash = Scraper.get_attributes(BASE_URL + movie.profile_url)
-      movie.add_attributes(attribute_hash)
+      if attribute_hash 
+        movie.add_attributes(attribute_hash)
+      else
+        Movie.all.delete(movie)
+      end
+    end
+  end
+
+  def make_users
+    n = 1
+    50.times do
+      User.new("user#{n}")
+      n += 1
+    end
+  end
+
+  def make_ratings 
+    Movie.all.each do |movie|
+      5.times do
+        user = User.all.sample
+        rating = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0].sample
+        View.new(movie, user, rating)
+      end
     end
   end
 
@@ -80,66 +97,17 @@ class Cli
     puts @output
   end
 
-#   def greet
-#     puts "Welcome to Movie Assistant! Please choose from the following options:"
-#     main_menu
-#   end
-
-#   def main_menu
-#     puts "
-#     'browse' - list all movies
-#     'browse by genre' - list movies by genre
-#     'browse by actor' - list movies by actor"
-#     main_menu_choice
-#   end
-
   def get_user_input
     @input = gets.strip.downcase
   end
 
-  # def valid_input?
-  #   case @keyword
-  #   when "main menu" then ["browse", "browse by actor", "browse by genre"].any?(@input)
-  #     unless 
-        
-  #       input_loop
-  #     end
-  #   when "browse by actor prompt"
-  #     unless @input == "list actors" || Actor.find_by_name(@input)
-  #       @output = ERRORS[:input]
-  #       input_loop
-  #     end
-  #   when "actor list"
-  #     unless Actor.find_by_name(@input) || @list[@input.to_i - 1]
-  #       @output = ERRORS[:actor]
-  #     end
-  #   when "browse by genre prompt"
-  #     unless @input == "list genres" || Genre.find_by_name(@input)
-  #       @output = ERRORS[:input]
-  #       input_loop
-  #     end
-  #   when "genre list"
-  #     unless Genre.find_by_name(@input) || @list[@input.to_i - 1]
-  #       @output = ERRORS[:genre]
-  #       input_loop
-  #     end
-  #   when "movie list"
-  #     unless @list[@input.to_i - 1] || Movie.find_by_name(@input)
-  #       @output = ERRORS[:movie]
-  #       input_loop
-  #     end
-  #   when "play"
-  #     unless @input == 'main menu' || @input == "exit"
-  #       @output = ERRORS[:input]
-  #       input_loop
-  #     end
-  #   end
-
-    
-  # end
-
   def get_new_output
     case @keyword
+    when "welcome"
+      name = @input.capitalize
+      @user = User.new(name)
+      @output = "Hi #{name}. Let's find a movie to watch! \n#{MAIN_MENU}"
+      @keyword = "main menu"
     when "main menu"
       case @input
       when "browse"
@@ -154,8 +122,54 @@ class Cli
         @output = PROMPTS[:browse_by_genre]
         @keyword = "browse by genre prompt"
         @list = nil
+      when "browse by rating"
+        ranked_movies = Movie.all.sort {|a, b| b.avg_rating <=> a.avg_rating }
+        @output = display_movies(ranked_movies)
+        @keyword = "movie list"
+        @list = ranked_movies
+      when "recommendation"
+        if @user.views.empty?
+          @output = "#{ERRORS[:no_views]} \n#{MAIN_MENU}"
+          @keyword = "main menu"
+        else
+          @output = PROMPTS[:recommendation]
+          @keyword = "rec prompt"
+        end
       else
         @output = ERRORS[:input]
+        @keyword = "main menu"
+      end
+    when "rec prompt"
+      case @input
+      when "1"
+        @output = play(@user.favorite_rec)
+        @keyword = "play"
+        @movie = @user.favorite_rec
+      when "2"
+        if @user.actor_rec
+          @output = play(@user.actor_rec)
+          @keyword = "play"
+          @movie = @user.actor_rec
+        else
+          @output = ERRORS[:actor_rec]
+          @keyword = "rec prompt"
+        end
+      when "3"
+        if @user.genre_rec
+          @output = play(@user.genre_rec)
+          @keyword = "play"
+          @movie = @user.genre_rec
+        else
+          @output = ERRORS[:genre_rec]
+          @keyword = "rec prompt" 
+        end
+      when "4"
+        @output = play(@user.user_rec)
+        @keyword = "play"
+        @movie = @user.user_rec
+      else
+        @output = ERRORS[:input]
+        @keyword = "rec prompt"
       end
     when "browse by actor prompt"
       if @input == "list actors"
@@ -209,78 +223,37 @@ class Cli
         @output = play(movie)
         @keyword = "play"
         @list = nil
+        @movie = movie
       elsif Movie.find_by_name(@input)
         movie = Movie.find_by_name(@input)
         @output = play(movie)
         @keyword = "play"
         @list = nil
+        @movie = movie
       else
         @output = ERRORS[:movie]
       end
     when "play"
-      if @input == "main menu" || @input == "exit"
+      if @input.to_f >= 1 && @input.to_f <= 5
+        movie = @movie
+        user = @user
+        rating = (@input.to_f * 2).round / 2
+        View.new(movie, user, rating)
+        @output = "Your rating for '#{movie.name}' has been recorded
+         #{PROMPTS[:next]}"
+        @keyword = "next"
+      else
+        @output = ERRORS[:rating]
+      end
+    when "next"
+      if @input == "main menu"
         @output = MAIN_MENU
         @keyword = "main menu"
-        @list = nil
       else
         @output = ERRORS[:input]
       end
     end
-
   end
-
-#   def main_menu_choice
-#     get_user_input
-#     commands = ["browse", "browse by actor", "browse by genre"]
-#     until commands.any?(@input)
-#       error("Sorry, that is not a valid command, please try again", "main_menu_choice")
-#     end
-#     case @input
-#     when "browse" then browse
-#     when "browse by actor" then browse_by(Actor)
-#     when "browse by genre" then browse_by(Genre)
-#     end
-#   end
-
-#   def browse
-#     display_movies(Movie.all)
-#     select(Movie, Movie.all)
-#   end
-
-#   def browse_by(class_name)
-#     puts "Please enter a #{class_name.to_s} or enter 'list #{class_name.to_s}s' to see all #{class_name.to_s}s"
-#     get_user_input
-#     if @input == "list #{class_name.to_s}s".downcase
-#       display_names(class_name)
-#       criteria = select(class_name, class_name.all)
-#     else
-#       until class_name.find_by_name(@input)
-#       puts "Sorry, I can't find that #{class_name.to_s}, please try again"
-#       get_user_input
-#       end
-#       criteria = class_name.find_by_name(@input)
-#     end
-#     display_movies(criteria.movies)
-#     movie_selection = select(class_name, criteria.movies)
-#     play(movie_selection)
-#   end
-
-#   def browse_by_actor
-#     puts "Please enter an actor"
-#     get_user_input
-#     actor = Actor.find_by_name(@input)
-#     if actor
-#       display_movies(actor.movies)
-#       select_movie(actor.movies)
-#     else
-#       error("Sorry, I can't find that actor, please try again", "main_menu_choice")
-#     end
-#   end
-
-#   def error(error_message, method_name, *args)
-#     puts error_message
-#     args.length > 0 ? send(method_name, args) : send(method_name)
-#   end
 
   def list_movies(movies)
     movies.each.with_index(1) do |movie, index|
@@ -294,7 +267,8 @@ class Cli
   def display_movie(movie)
     puts "#{movie.name}
     Actors: #{movie.actor_names.join(", ")} 
-    Genre(s): #{movie.genre_names.join(", ")}"
+    Genre(s): #{movie.genre_names.join(", ")}
+    Rating: #{movie.avg_rating} stars"
   end
 
   def display_movies(movies)
@@ -317,34 +291,17 @@ class Cli
     list_movies(genre.movies)
   end
 
-#   def select(class_name, collection)
-#     get_user_input
-#     if /^[\d]+$/.match?(@input)
-#       criteria = collection[@input.to_i - 1]
-#       unless criteria
-#        error("Sorry, that is not a valid number, please try again", "select", class_name.to_s, collection)
-#       end
-#     else
-#       criteria = class_name.find_by_name(@input) 
-#       unless criteria
-#         error("Sorry, I can't find that #{class_name.to_s}, please try again", "select", class_name.to_s, collection)
-#       end
-#     end
-#     criteria
-#    end
+  def play(movie)
+    puts "Now Playing '#{movie.name}'"
+    10.times do
+      print"."
+      sleep(0.5)
+    end
+    puts "\n #{PROMPTS[:rating]}"
+  end
 
-   def play(movie)
-     puts "Now Playing '#{movie.name}'"
-     10.times do
-       print"."
-       sleep(0.5)
-     end
-     puts "\n #{PROMPTS[:next]}"
-   end
-
-   def goodbye
-     puts "Thank you for using Movie Assistant, see you again next time!"
-   end
-
+  def goodbye
+    puts "Thank you for using Movie Assistant, see you again next time!"
+  end
 
 end

@@ -51,4 +51,21 @@ class Movie
     self.all.detect {|movie| movie.name.downcase == name.downcase }
   end
 
+  def views
+    View.all.select {|view| view.movie == self}
+  end
+
+  def viewers
+    self.views.select {|view| view.user }
+  end
+
+  def ratings
+    views.map {|view| view.rating }
+  end
+
+  def avg_rating
+    base_rating = ratings.sum.to_f / ratings.length
+    (base_rating * 2).round / 2.0
+  end
+
 end
