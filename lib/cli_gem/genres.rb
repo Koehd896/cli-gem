@@ -1,4 +1,4 @@
-class Genre
+class CliGem::Genre
   attr_accessor :name
 
   @@all = []
@@ -17,7 +17,7 @@ class Genre
   end
   
   def movies
-    Movie.all.select do |movie|
+    CliGem::Movie.all.select do |movie|
       movie.genres.include?(self)
     end
   end

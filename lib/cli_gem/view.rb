@@ -1,4 +1,4 @@
-class View
+class CliGem::View
   attr_accessor :movie, :user, :rating 
 
   @@all = []

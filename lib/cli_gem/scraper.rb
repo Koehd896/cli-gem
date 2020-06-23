@@ -1,7 +1,7 @@
 require "nokogiri"
 require "open-uri"
 
-class Scraper
+class CliGem::Scraper
 
   def self.get_movies(url)
     doc = Nokogiri::HTML(open(url))

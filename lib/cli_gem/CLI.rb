@@ -1,4 +1,4 @@
-class Cli
+class CliGem::Cli
   BASE_URL = "https://www.imdb.com"
   LIST_URL = "https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm"
 
@@ -52,16 +52,16 @@ class Cli
   end
 
   def make_movies
-    Movie.create_from_collection(Scraper.get_movies(LIST_URL))
+    CliGem::Movie.create_from_collection(CliGem::Scraper.get_movies(LIST_URL))
   end
 
   def add_movie_attributes
-    Movie.all.each do |movie|
-      attribute_hash = Scraper.get_attributes(BASE_URL + movie.profile_url)
+    CliGem::Movie.all.each do |movie|
+      attribute_hash = CliGem::Scraper.get_attributes(BASE_URL + movie.profile_url)
       if attribute_hash 
         movie.add_attributes(attribute_hash)
       else
-        Movie.all.delete(movie)
+        CliGem::Movie.all.delete(movie)
       end
     end
   end
@@ -69,17 +69,17 @@ class Cli
   def make_users
     n = 1
     50.times do
-      User.new("user#{n}")
+      CliGem::User.new("user#{n}")
       n += 1
     end
   end
 
   def make_ratings 
-    Movie.all.each do |movie|
+    CliGem::Movie.all.each do |movie|
       5.times do
         user = User.all.sample
         rating = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0].sample
-        View.new(movie, user, rating)
+        CliGem::View.new(movie, user, rating)
       end
     end
   end
@@ -111,9 +111,9 @@ class Cli
     when "main menu"
       case @input
       when "browse"
-        @output = display_movies(Movie.all)
+        @output = display_movies(CliGem::Movie.all)
         @keyword = "movie list"
-        @list = Movie.all
+        @list = CliGem::Movie.all
       when "browse by actor"
         @output = PROMPTS[:browse_by_actor]
         @keyword = "browse by actor prompt"
@@ -123,7 +123,7 @@ class Cli
         @keyword = "browse by genre prompt"
         @list = nil
       when "browse by rating"
-        ranked_movies = Movie.all.sort {|a, b| b.avg_rating <=> a.avg_rating }
+        ranked_movies = CliGem::Movie.all.sort {|a, b| b.avg_rating <=> a.avg_rating }
         @output = display_movies(ranked_movies)
         @keyword = "movie list"
         @list = ranked_movies
@@ -175,7 +175,7 @@ class Cli
       if @input == "list actors"
         @output = display_names(Actor)
         @keyword = "actor list"
-        @list = Actor.all
+        @list = CliGem::Actor.all
       else
         @keyword = "actor list"
         get_new_output
@@ -186,8 +186,8 @@ class Cli
         @output = display_movies(actor.movies)
         @keyword = "movie list"
         @list = actor.movies
-      elsif Actor.find_by_name(@input)
-        actor = Actor.find_by_name(@input)
+      elsif CliGem::Actor.find_by_name(@input)
+        actor = CliGem::Actor.find_by_name(@input)
         @output = display_movies(actor.movies)
         @keyword = "movie list"
         @list = actor.movies
@@ -198,7 +198,7 @@ class Cli
       if @input == "list genres"
         @output = display_names(Genre)
         @keyword = "genre list"
-        @list = Genre.all
+        @list = CliGem::Genre.all
       else
         @keyword = "genre list"
         get_new_output
@@ -209,8 +209,8 @@ class Cli
         @output = display_movies(genre.movies)
         @keyword = "movie list"
         @list = genre.movies
-      elsif Genre.find_by_name(@input)
-        genre = Genre.find_by_name(@input)
+      elsif CliGem::Genre.find_by_name(@input)
+        genre = CliGem::Genre.find_by_name(@input)
         @output = display_movies(genre.movies)
         @keyword = "movie list"
         @list = genre.movies
@@ -224,8 +224,8 @@ class Cli
         @keyword = "play"
         @list = nil
         @movie = movie
-      elsif Movie.find_by_name(@input)
-        movie = Movie.find_by_name(@input)
+      elsif CliGem::Movie.find_by_name(@input)
+        movie = CliGem::Movie.find_by_name(@input)
         @output = play(movie)
         @keyword = "play"
         @list = nil
@@ -238,7 +238,7 @@ class Cli
         movie = @movie
         user = @user
         rating = (@input.to_f * 2).round / 2
-        View.new(movie, user, rating)
+        CliGem::View.new(movie, user, rating)
         @output = "Your rating for '#{movie.name}' has been recorded
          #{PROMPTS[:next]}"
         @keyword = "next"

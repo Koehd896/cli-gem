@@ -1,4 +1,4 @@
-class User
+class CliGem::User
   attr_accessor :name
 
   @@all = []
@@ -13,7 +13,7 @@ class User
   end
 
   def views
-    View.all.select {|view| view.user == self}
+    CliGem::View.all.select {|view| view.user == self}
   end
 
   def watched
@@ -25,7 +25,7 @@ class User
   end
 
   def favorite_rec
-    top_ranked = Movie.all.sort {|a, b| b.avg_rating <=> a.avg_rating }.find do |movie|
+    top_ranked = CliGem::Movie.all.sort {|a, b| b.avg_rating <=> a.avg_rating }.find do |movie|
       !self.watched.include?(movie)
     end
     self.actor_rec || self.genre_rec || top_ranked
@@ -46,7 +46,7 @@ class User
   end
 
   def user_rec
-    rec_user = User.all.find {|user| user.watched.include?(self.favorite_movie) }
+    rec_user = CliGem::User.all.find {|user| user.watched.include?(self.favorite_movie) }
     rec_user.watched.find {|movie| !self.watched.include?(movie) }
   end
 

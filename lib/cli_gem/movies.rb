@@ -1,4 +1,4 @@
-class Movie
+class CliGem::Movie
   attr_accessor :name, :profile_url
   attr_reader :actors, :genres
 
@@ -32,11 +32,11 @@ class Movie
   end
 
   def genres=(genre)
-    @genres << Genre.find_or_create_by_name(genre)
+    @genres << CliGem::Genre.find_or_create_by_name(genre)
   end
 
   def actors=(actor)
-    @actors << Actor.find_or_create_by_name(actor)
+    @actors << CliGem::Actor.find_or_create_by_name(actor)
   end
 
   def actor_names
@@ -52,7 +52,7 @@ class Movie
   end
 
   def views
-    View.all.select {|view| view.movie == self}
+    CliGem::View.all.select {|view| view.movie == self}
   end
 
   def viewers

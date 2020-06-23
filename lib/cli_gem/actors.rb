@@ -1,4 +1,4 @@
-class Actor
+class CliGem::Actor
   attr_accessor :name
 
   @@all = []
@@ -17,7 +17,7 @@ class Actor
   end
   
   def movies
-    Movie.all.select do |movie|
+    CliGem::Movie.all.select do |movie|
       movie.actors.include?(self)
     end
   end
