@@ -4,16 +4,13 @@ require "open-uri"
 class Scraper
 
   def self.get_movies(url)
-    movies = []
     doc = Nokogiri::HTML(open(url))
-    doc.css(".lister-list tr").each do |profile|
+    doc.css(".lister-list tr").map do |profile|
       movie = {
         name: profile.css(".titleColumn a").text,
         profile_url: profile.css(".titleColumn a").attribute("href").value
       }
-      movies << movie
     end
-    movies
   end
 
   def self.get_attributes(movie_profile_url)
