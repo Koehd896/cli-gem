@@ -77,7 +77,7 @@ class CliGem::Cli
   def make_ratings 
     CliGem::Movie.all.each do |movie|
       5.times do
-        user = User.all.sample
+        user = CliGem::User.all.sample
         rating = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0].sample
         CliGem::View.new(movie, user, rating)
       end
@@ -105,7 +105,7 @@ class CliGem::Cli
     case @keyword
     when "welcome"
       name = @input.capitalize
-      @user = User.new(name)
+      @user = CliGem::User.new(name)
       @output = "Hi #{name}. Let's find a movie to watch! \n#{MAIN_MENU}"
       @keyword = "main menu"
     when "main menu"
@@ -173,7 +173,7 @@ class CliGem::Cli
       end
     when "browse by actor prompt"
       if @input == "list actors"
-        @output = display_names(Actor)
+        @output = display_names(CliGem::Actor)
         @keyword = "actor list"
         @list = CliGem::Actor.all
       else
@@ -196,7 +196,7 @@ class CliGem::Cli
       end
     when "browse by genre prompt"
       if @input == "list genres"
-        @output = display_names(Genre)
+        @output = display_names(CliGem::Genre)
         @keyword = "genre list"
         @list = CliGem::Genre.all
       else

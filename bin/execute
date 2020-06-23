@@ -2,7 +2,7 @@
 
 require_relative "../lib/cli_gem.rb"
 
-new_cli = Cli.new
+new_cli = CliGem::Cli.new
 new_cli.run
 
 
