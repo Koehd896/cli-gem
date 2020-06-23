@@ -5,7 +5,6 @@ require "pry"
 
 new_cli = Cli.new
 new_cli.run
-binding.pry
 
 
 
