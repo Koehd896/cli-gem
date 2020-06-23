@@ -35,14 +35,14 @@ class User
     recs = self.favorite_movie.actors.map do |actor|
       actor.movies.select {|movie| !self.watched.include?(movie) }
     end
-    recs[0][0]
+    recs.flatten[0]
   end
 
   def genre_rec
     recs = self.favorite_movie.genres.map do |genre|
       genre.movies.select {|movie| !self.watched.include?(movie) }
     end
-    recs[0][0]
+    recs.flatten[0]
   end
 
   def user_rec
