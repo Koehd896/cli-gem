@@ -1,8 +1,8 @@
 # CliGem
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/cli_gem`. To experiment with that code, run `bin/console` for an interactive prompt.
+Introducing Movie Assistant! This cli gem allows you to view details of popular movies (scraped fromIMDB), view a movie and even get personalized recommendations based on your viewing history and that of other users.
 
-TODO: Delete this and the text above, and describe your gem
+Enjoy!
 
 ## Installation
 
